@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>India Weather App</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #e6f2ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .card {
+            width: 380px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 0 10px gray;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid gray;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 17px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h2>🌦 India Weather App</h2>
+
+        <input id="inputVal" placeholder="Enter City / Village / PIN Code">
+        <button onclick="getWeather()">Get Weather</button>
+        <br><br>
+
+        <button onclick="getGPSWeather()">Use My Location (GPS)</button>
+
+        <div id="result"></div>
+    </div>
+
+<script>
+    const apiKey = "f8a227c7fd46dbae21c8b7c7cc9a4392";  // YOUR KEY
+
+    async function getWeather() {
+        let value = document.getElementById("inputVal").value.trim();
+        let url = "";
+
+        // If user enters PIN code (6 digit)
+        if (/^\d{6}$/.test(value)) {
+            url = `https://api.openweathermap.org/data/2.5/weather?zip=${value},IN&appid=${apiKey}&units=metric`;
+        } 
+        else {
+            url = `https://api.openweathermap.org/data/2.5/weather?q=${value},IN&appid=${apiKey}&units=metric`;
+        }
+
+        fetchData(url);
+    }
+
+    // GPS Auto Location
+    function getGPSWeather() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    let lat = position.coords.latitude;
+                    let lon = position.coords.longitude;
+
+                    let url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+                    fetchData(url);
+                },
+                () => alert("Allow location access to use this feature")
+            );
+        } else {
+            alert("GPS not supported in this device");
+        }
+    }
+
+    // Fetch Function
+    async function fetchData(url) {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.cod != 200) {
+            document.getElementById("result").innerHTML = "❌ Cannot fetch weather";
+            return;
+        }
+
+        document.getElementById("result").innerHTML = `
+            <p><b>${data.name}</b></p>
+            <p>Temperature: ${data.main.temp}°C</p>
+            <p>Weather: ${data.weather[0].description}</p>
+            <p>Humidity: ${data.main.humidity}%</p>
+            <p>Wind: ${data.wind.speed} m/s</p>
+        `;
+    }
+</script>
+
+</body>
+</html>

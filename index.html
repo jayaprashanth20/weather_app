@@ -1,114 +1,85 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>India Weather App</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #e6f2ff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .card {
-            width: 380px;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 0 10px gray;
-        }
-        input {
-            width: 80%;
-            padding: 10px;
-            margin: 5px;
-            border: 1px solid gray;
-            border-radius: 5px;
-        }
-        button {
-            padding: 10px 20px;
-            margin-top: 10px;
-            border: none;
-            background: #007bff;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        #result {
-            margin-top: 20px;
-            font-size: 17px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>India Weather App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="bg-gradient-to-br from-blue-200 to-blue-500 min-h-screen flex items-center justify-center p-4">
 
-<body>
-    <div class="card">
-        <h2>🌦 India Weather App</h2>
+  <div class="w-full max-w-md bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl p-6">
+    <h2 class="text-2xl font-bold text-center mb-4 text-blue-700">🌦 India Weather App</h2>
 
-        <input id="inputVal" placeholder="Enter City / Village / PIN Code">
-        <button onclick="getWeather()">Get Weather</button>
-        <br><br>
+    <input id="inputVal" placeholder="Enter City / Village / PIN Code"
+      class="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none" />
 
-        <button onclick="getGPSWeather()">Use My Location (GPS)</button>
+    <button onclick="getWeather()"
+      class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-xl transition">Get Weather</button>
 
-        <div id="result"></div>
-    </div>
+    <button onclick="getGPSWeather()"
+      class="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-xl transition">Use My Location (GPS)</button>
+
+    <div id="loading" class="hidden text-blue-700 font-semibold mt-4">⏳ Fetching weather...</div>
+    <div id="result" class="mt-6 text-center"></div>
+  </div>
 
 <script>
-    const apiKey = "f8a227c7fd46dbae21c8b7c7cc9a4392";  // YOUR KEY
+  const apiKey = "f8a227c7fd46dbae21c8b7c7cc9a4392"; 
 
-    async function getWeather() {
-        let value = document.getElementById("inputVal").value.trim();
-        let url = "";
+  async function getWeather() {
+    let value = document.getElementById("inputVal").value.trim();
+    let url = "";
 
-        // If user enters PIN code (6 digit)
-        if (/^\d{6}$/.test(value)) {
-            url = `https://api.openweathermap.org/data/2.5/weather?zip=${value},IN&appid=${apiKey}&units=metric`;
-        } 
-        else {
-            url = `https://api.openweathermap.org/data/2.5/weather?q=${value},IN&appid=${apiKey}&units=metric`;
-        }
-
-        fetchData(url);
+    if (/^\d{6}$/.test(value)) {
+      url = `https://api.openweathermap.org/data/2.5/weather?zip=${value},IN&appid=${apiKey}&units=metric`;
+    } else {
+      url = `https://api.openweathermap.org/data/2.5/weather?q=${value},IN&appid=${apiKey}&units=metric`;
     }
 
-    // GPS Auto Location
-    function getGPSWeather() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                position => {
-                    let lat = position.coords.latitude;
-                    let lon = position.coords.longitude;
+    fetchData(url);
+  }
 
-                    let url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
-                    fetchData(url);
-                },
-                () => alert("Allow location access to use this feature")
-            );
-        } else {
-            alert("GPS not supported in this device");
-        }
+  function getGPSWeather() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          let lat = pos.coords.latitude;
+          let lon = pos.coords.longitude;
+          let url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+          fetchData(url);
+        },
+        () => alert("Please allow GPS access.")
+      );
+    }
+  }
+
+  function showLoading(){document.getElementById('loading').classList.remove('hidden');}
+  function hideLoading(){document.getElementById('loading').classList.add('hidden');}
+
+  async function fetchData(url) {
+    showLoading();
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.cod != 200) {
+      hideLoading();
+      document.getElementById("result").innerHTML = `<p class='text-red-600 font-semibold'>❌ Unable to fetch weather</p>`;
+      return;
     }
 
-    // Fetch Function
-    async function fetchData(url) {
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if (data.cod != 200) {
-            document.getElementById("result").innerHTML = "❌ Cannot fetch weather";
-            return;
-        }
-
-        document.getElementById("result").innerHTML = `
-            <p><b>${data.name}</b></p>
-            <p>Temperature: ${data.main.temp}°C</p>
-            <p>Weather: ${data.weather[0].description}</p>
-            <p>Humidity: ${data.main.humidity}%</p>
-            <p>Wind: ${data.wind.speed} m/s</p>
-        `;
-    }
+    document.getElementById("result").innerHTML = `
+      <div class='bg-white shadow-md rounded-xl p-4'>
+        <h3 class='text-xl font-bold text-blue-700 mb-2'>${data.name}</h3>
+        <p class='text-gray-700'><b>Temperature:</b> ${data.main.temp}°C</p>
+        <img src="https://openweathermap.org/img/wn/${data.weather[0].icon || '01d'}@2x.png" onerror="this.src='https://openweathermap.org/img/wn/01d@2x.png';" class="mx-auto w-20 h-20" />
+        <p class='text-gray-700 text-lg font-semibold capitalize'>${data.weather[0].description}</p>
+        <p class='text-gray-700'><b>Weather:</b> ${data.weather[0].description}</p>
+        <p class='text-gray-700'><b>Humidity:</b> ${data.main.humidity}%</p>
+        <p class='text-gray-700'><b>Wind:</b> ${data.wind.speed} m/s</p>
+      </div>
+    `;
+  }
 </script>
 
 </body>
